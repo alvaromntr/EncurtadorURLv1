@@ -1,0 +1,31 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.1 Chrome/142.0.7444.265 Electron/39.8.0 Safari/537.36" version="29.6.1">
+  <diagram name="Arquitetura PriceFinder" id="a8HBGp5SEZUe3nwgzW56">
+    <mxGraphModel dx="1426" dy="849" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="bvbUXMaBXJ5dxG0ZDsuO-11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;" value="Usuário&#xa;(Navegador / Mobile)" vertex="1">
+          <mxGeometry height="70" width="200" x="750" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="bvbUXMaBXJ5dxG0ZDsuO-12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;" value="Frontend Web&#xa;React.js&#xa;Zustand + Tailwind + DaisyUI&#xa;(Vercel)" vertex="1">
+          <mxGeometry height="110" width="300" x="700" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="bvbUXMaBXJ5dxG0ZDsuO-13" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;" value="Backend API&#xa;Spring Boot (Java)&#xa;Spring Security + JWT&#xa;Regras de Negócio&#xa;Integração APIs" vertex="1">
+          <mxGeometry height="140" width="340" x="680" y="490" as="geometry" />
+        </mxCell>
+        <mxCell id="bvbUXMaBXJ5dxG0ZDsuO-14" parent="1" style="shape=cylinder;whiteSpace=wrap;html=1;fillColor=#f8cecc;" value="Banco de Dados&#xa;PostgreSQL&#xa;(Cloud)" vertex="1">
+          <mxGeometry height="100" width="220" x="740" y="690" as="geometry" />
+        </mxCell>
+        <mxCell id="bvbUXMaBXJ5dxG0ZDsuO-16" edge="1" parent="1" source="bvbUXMaBXJ5dxG0ZDsuO-11" style="endArrow=block;" target="bvbUXMaBXJ5dxG0ZDsuO-12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="bvbUXMaBXJ5dxG0ZDsuO-17" edge="1" parent="1" source="bvbUXMaBXJ5dxG0ZDsuO-12" style="endArrow=block;" target="bvbUXMaBXJ5dxG0ZDsuO-13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="bvbUXMaBXJ5dxG0ZDsuO-18" edge="1" parent="1" source="bvbUXMaBXJ5dxG0ZDsuO-13" style="endArrow=block;" target="bvbUXMaBXJ5dxG0ZDsuO-14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
