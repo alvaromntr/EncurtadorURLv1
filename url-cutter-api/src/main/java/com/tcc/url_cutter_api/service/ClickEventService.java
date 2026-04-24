@@ -21,7 +21,7 @@ public class ClickEventService {
                                           String userAgent) {
 
         ClickEvent event = ClickEvent.builder()
-                .UrlId(urlId)
+                .urlId(urlId)
                 .clickedAt(LocalDateTime.now())
                 .ipAddress(ipAddress)
                 .userAgent(userAgent)

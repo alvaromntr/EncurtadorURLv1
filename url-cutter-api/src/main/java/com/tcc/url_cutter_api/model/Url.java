@@ -5,6 +5,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import org.springframework.data.relational.core.mapping.Column;
 
@@ -31,4 +32,7 @@ public class Url {
 
     @Column("created_at")
     private LocalDateTime createdAt;
+
+    @Column("user_id")
+    private UUID userId; // 👈 relacionamento
 }

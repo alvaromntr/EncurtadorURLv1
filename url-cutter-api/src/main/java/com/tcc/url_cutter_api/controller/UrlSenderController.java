@@ -1,11 +1,11 @@
 package com.tcc.url_cutter_api.controller;
 
-import com.tcc.url_cutter_api.dto.UrlRequest;
-import com.tcc.url_cutter_api.dto.UrlResponse;
 import com.tcc.url_cutter_api.repo.UrlRepository;
+import com.tcc.url_cutter_api.service.ClickEventService;
 import com.tcc.url_cutter_api.service.SimpleURLShortenerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -17,23 +17,37 @@ public class UrlSenderController {
 
     private final SimpleURLShortenerService shortenerService;
 
+    private final ClickEventService clickEventService;
+
     private final UrlRepository urlRepository;
 
-    // 🔗 Endpoint da URL curta
     @GetMapping("/r/{shortCode}")
-    public Mono<ResponseEntity<Object>> redirect(@PathVariable String shortCode) {
+    public Mono<ResponseEntity<Object>> redirect(
+            @PathVariable String shortCode,
+            ServerHttpRequest request
+    ) {
 
         return urlRepository.findByShortCode(shortCode)
-                .map(url ->
-                        ResponseEntity
-                                .status(302) // HTTP Redirect
-                                .location(URI.create(url.getOriginalUrl()))
-                                .build()
-                )
-                .switchIfEmpty(
-                        Mono.just(ResponseEntity.<Void>notFound().build())
-                );
+                .flatMap(url -> {
 
+                    String ip = request.getRemoteAddress() != null
+                            ? request.getRemoteAddress().getAddress().getHostAddress()
+                            : "unknown";
+
+                    String userAgent = request.getHeaders().getFirst("User-Agent");
+
+                    return clickEventService
+                            .registerClick(url.getId(), ip, userAgent)
+                            .thenReturn(
+                                    ResponseEntity
+                                            .status(302)
+                                            .location(URI.create(url.getOriginalUrl()))
+                                            .build()
+                            );
+                })
+                .switchIfEmpty(
+                        Mono.just(ResponseEntity.notFound().build())
+                );
     }
 
 

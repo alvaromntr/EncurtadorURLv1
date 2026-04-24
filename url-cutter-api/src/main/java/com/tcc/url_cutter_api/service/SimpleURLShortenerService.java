@@ -1,14 +1,17 @@
 package com.tcc.url_cutter_api.service;
 
+import com.tcc.url_cutter_api.dto.UrlResponse;
 import com.tcc.url_cutter_api.model.Url;
-import com.tcc.url_cutter_api.repo.ClickEventRepository;
 import com.tcc.url_cutter_api.repo.UrlRepository;
+import com.tcc.url_cutter_api.utils.SecurityUtils;
 import com.tcc.url_cutter_api.utils.SnowflakeIdGenerator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 
 @Service
@@ -16,13 +19,13 @@ public class SimpleURLShortenerService {
 
     private UrlRepository urlRepository;
 
-    private ClickEventRepository clickEventRepository;
+    private final SecurityUtils securityUtils;
 
     private final SnowflakeIdGenerator idGenerator = new SnowflakeIdGenerator(1); // ID do nó
 
-    public SimpleURLShortenerService(UrlRepository urlRepository, ClickEventRepository clickEventRepository) {
+    public SimpleURLShortenerService(UrlRepository urlRepository, SecurityUtils securityUtils) {
         this.urlRepository = urlRepository;
-        this.clickEventRepository = clickEventRepository;
+        this.securityUtils = securityUtils;
     }
 
     // Caracteres Base62
@@ -47,33 +50,81 @@ public class SimpleURLShortenerService {
         return sb.reverse().toString();
     }
 
-    // Encurta as urls longas
+    public Mono<Url> createUrl(String originalUrl, UUID userId) {
+        Url url = new Url();
+        url.setOriginalUrl(originalUrl);
+        url.setUserId(userId);
+        url.setCreatedAt(LocalDateTime.now());
+        url.setClickCount(0L);
+
+        return urlRepository.save(url);
+    }
+
+//    public Mono<UUID> getCurrentUserId() {
+//        return ReactiveSecurityContextHolder.getContext()
+//                .map(ctx -> (JwtAuthenticationToken) ctx.getAuthentication())
+//                .map(auth -> (AuthenticatedUser) auth.getPrincipal())
+//                .map(AuthenticatedUser::id); // 👈 aqui
+//    }
+
+    public Flux<UrlResponse> getAllUrls() {
+
+        return securityUtils.getCurrentUserId()
+                .flatMapMany(userId ->
+                        urlRepository.findByUserId(userId)
+                                .map(url -> new UrlResponse(
+                                        url.getId(),
+                                        baseUrl + url.getShortCode(),
+                                        url.getOriginalUrl(),
+                                        url.getClickCount(),
+                                        url.getCreatedAt()
+                                ))
+                );
+    }
+
+    public Mono<Void> deleteById(Long id) {
+
+        return securityUtils.getCurrentUserId()
+                .flatMap(userId ->
+                        urlRepository.findById(id)
+                                .switchIfEmpty(Mono.error(new RuntimeException("URL not found")))
+                                .filter(url -> url.getUserId().equals(userId))
+                                .switchIfEmpty(Mono.error(new RuntimeException("Access denied")))
+                                .flatMap(urlRepository::delete)
+                );
+    }
+
     public Mono<String> encode(String originalUrl) {
 
         return urlRepository.findByOriginalUrl(originalUrl)
-                .map(url -> baseUrl + url.getShortCode()) // ✅ corrigido
-                .switchIfEmpty(Mono.defer(() -> {
+                .map(url -> baseUrl + url.getShortCode())
+                .switchIfEmpty(Mono.defer(() ->
 
-                    Long hash = idGenerator.nextId(); // 🔥 agora é hash
+                        securityUtils.getCurrentUserId() // 👈 pega o usuário aqui
+                                .flatMap(userId -> {
 
-                    String shortCode = convertToBase62(hash);
+                                    Long hash = idGenerator.nextId();
+                                    String shortCode = convertToBase62(hash);
 
-                    Url url = new Url();
+                                    Url url = new Url();
 
-                    url.setHash(hash);
-                    url.setOriginalUrl(
-                            originalUrl.startsWith("http")
-                                    ? originalUrl
-                                    : "https://" + originalUrl
-                    );
-                    url.setShortCode(shortCode);
-                    url.setClickCount(0L);
-                    url.setCreatedAt(LocalDateTime.now());
+                                    url.setHash(hash);
+                                    url.setOriginalUrl(
+                                            originalUrl.startsWith("http")
+                                                    ? originalUrl
+                                                    : "https://" + originalUrl
+                                    );
+                                    url.setShortCode(shortCode);
+                                    url.setClickCount(0L);
+                                    url.setCreatedAt(LocalDateTime.now());
 
-                    return urlRepository.save(url)
-                            .doOnNext(saved -> System.out.println("SALVO: " + saved))
-                            .map(savedUrl -> baseUrl + savedUrl.getShortCode());
-                }));
+                                    url.setUserId(userId); // 👈 AQUI está a associação
+
+                                    return urlRepository.save(url)
+                                            .doOnNext(saved -> System.out.println("SALVO: " + saved))
+                                            .map(savedUrl -> baseUrl + savedUrl.getShortCode());
+                                })
+                ));
     }
 
     // Decodifica url

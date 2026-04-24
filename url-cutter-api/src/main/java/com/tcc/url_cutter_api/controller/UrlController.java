@@ -2,8 +2,11 @@ package com.tcc.url_cutter_api.controller;
 
 import com.tcc.url_cutter_api.dto.UrlRequest;
 import com.tcc.url_cutter_api.dto.UrlResponse;
+import com.tcc.url_cutter_api.dto.UrlShortenResponse;
 import com.tcc.url_cutter_api.model.Url;
+import com.tcc.url_cutter_api.repo.ClickEventRepository;
 import com.tcc.url_cutter_api.repo.UrlRepository;
+import com.tcc.url_cutter_api.service.ClickEventService;
 import com.tcc.url_cutter_api.service.SimpleURLShortenerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,15 +26,19 @@ public class UrlController {
     private final UrlRepository urlRepository;
 
     @PostMapping("/shorten")
-    public Mono<UrlResponse> shorten(@RequestBody UrlRequest request) {
+    public Mono<UrlShortenResponse> shorten(@RequestBody UrlRequest request) {
         return shortenerService.encode(request.getUrl())
-                .map(UrlResponse::new);
+                .map(UrlShortenResponse::new);
     }
 
-    @GetMapping("/all")
-    public Flux<Url> getAll() {
-        return urlRepository.findAll()
-                .doOnNext(u -> System.out.println("DO BANCO: " + u));
+    @GetMapping("/my-urls")
+    public Flux<UrlResponse> getMyUrls() {
+        return shortenerService.getAllUrls();
+    }
+
+    @DeleteMapping("/{id}")
+    public Mono<Void> delete(@PathVariable Long id) {
+        return shortenerService.deleteById(id);
     }
 
 

@@ -2,6 +2,7 @@ package com.tcc.url_cutter_api.model;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDateTime;
@@ -16,13 +17,18 @@ public class ClickEvent {
     @Id
     private Long id;
 
-    private Long UrlId;
+    @Column("url_id")
+    private Long urlId;
 
+    @Column("clicked_at")
     private LocalDateTime clickedAt;
 
+    @Column("ip_address")
     private String ipAddress;
 
+    @Column("user_agent")
     private String userAgent;
 
+    @Column("referer")
     private String referer;
 }
