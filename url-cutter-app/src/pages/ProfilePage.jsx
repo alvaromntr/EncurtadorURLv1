@@ -1,33 +1,46 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Trash2, User, ShieldAlert } from "lucide-react";
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Trash2, User, ShieldAlert } from 'lucide-react'
 
-import { useAuthStore } from "../store/useAuthStore";
+import { useAuthStore } from '../store/useAuthStore'
 
 export default function ProfilePage() {
-  const navigate = useNavigate();
 
-  const { user, deleteAccount, loading } = useAuthStore();
+  const navigate = useNavigate()
 
-  const [confirmText, setConfirmText] = useState("");
+  const {
+    user,
+    deleteAccount,
+    loading
+  } = useAuthStore()
+
+  const [confirmText, setConfirmText] =
+    useState('')
 
   const handleDelete = async () => {
-    if (confirmText !== "EXCLUIR") {
-      return;
+
+    if (confirmText !== 'EXCLUIR') {
+      return
     }
 
     try {
-      await deleteAccount();
 
-      navigate("/login");
+      await deleteAccount()
+
+      navigate('/login')
+
     } catch (err) {
-      console.error(err);
 
-      alert("Erro ao excluir conta");
+      console.error(err)
+
+      alert(
+        'Erro ao excluir conta'
+      )
     }
-  };
+  }
 
   return (
+
     <div
       className="
         min-h-screen
@@ -38,6 +51,7 @@ export default function ProfilePage() {
         p-6
       "
     >
+
       <div
         className="
           card
@@ -47,7 +61,9 @@ export default function ProfilePage() {
           shadow-2xl
         "
       >
+
         <div className="card-body gap-6">
+
           {/* HEADER */}
 
           <div
@@ -57,6 +73,7 @@ export default function ProfilePage() {
               gap-4
             "
           >
+
             <div
               className="
                 w-16
@@ -68,10 +85,13 @@ export default function ProfilePage() {
                 justify-center
               "
             >
+
               <User className="w-8 h-8" />
+
             </div>
 
             <div>
+
               <h1
                 className="
                   text-3xl
@@ -81,8 +101,12 @@ export default function ProfilePage() {
                 Meu Perfil
               </h1>
 
-              <p className="opacity-70">Gerencie sua conta</p>
+              <p className="opacity-70">
+                Gerencie sua conta
+              </p>
+
             </div>
+
           </div>
 
           {/* USER INFO */}
@@ -95,23 +119,37 @@ export default function ProfilePage() {
               space-y-3
             "
           >
+
             <div>
-              <span className="font-semibold">Primeiro nome:</span>
+
+              <span className="font-semibold">
+                Primeiro nome:
+              </span>
 
               <p>{user?.firstName}</p>
+
             </div>
 
             <div>
-              <span className="font-semibold">Sobrenome:</span>
+
+              <span className="font-semibold">
+                Sobrenome:
+              </span>
 
               <p>{user?.lastName}</p>
+
             </div>
 
             <div>
-              <span className="font-semibold">Email:</span>
+
+              <span className="font-semibold">
+                Email:
+              </span>
 
               <p>{user?.email}</p>
+
             </div>
+
           </div>
 
           {/* DANGER ZONE */}
@@ -125,6 +163,7 @@ export default function ProfilePage() {
               space-y-4
             "
           >
+
             <div
               className="
                 flex
@@ -132,6 +171,7 @@ export default function ProfilePage() {
                 gap-3
               "
             >
+
               <ShieldAlert
                 className="
                   text-error
@@ -149,10 +189,13 @@ export default function ProfilePage() {
               >
                 Zona de perigo
               </h2>
+
             </div>
 
             <p className="text-sm opacity-80">
+
               Esta ação remove permanentemente:
+
             </p>
 
             <ul
@@ -163,6 +206,7 @@ export default function ProfilePage() {
                 opacity-80
               "
             >
+
               <li>Sua conta</li>
 
               <li>Suas permissões</li>
@@ -170,53 +214,78 @@ export default function ProfilePage() {
               <li>Seus códigos OTP</li>
 
               <li>Seu acesso à plataforma</li>
+
             </ul>
 
             <div className="form-control">
+
               <label className="label">
+
                 <span className="label-text">
-                  Digite <strong>EXCLUIR</strong> para confirmar
+                  Digite
+                  {' '}
+                  <strong>EXCLUIR</strong>
+                  {' '}
+                  para confirmar
                 </span>
+
               </label>
 
               <input
                 type="text"
                 value={confirmText}
-                onChange={(e) => setConfirmText(e.target.value)}
+                onChange={(e) =>
+                  setConfirmText(e.target.value)
+                }
                 className="
                   input
                   input-bordered
                   w-full
                 "
               />
+
             </div>
 
             <button
               onClick={handleDelete}
-              disabled={loading || confirmText !== "EXCLUIR"}
+              disabled={
+                loading ||
+                confirmText !== 'EXCLUIR'
+              }
               className="
                 btn
                 btn-error
                 w-full
               "
             >
-              {loading ? (
-                <span
-                  className="
+
+              {
+                loading
+                  ? (
+                    <span
+                      className="
                         loading
                         loading-spinner
                       "
-                />
-              ) : (
-                <>
-                  <Trash2 className="w-5 h-5" />
-                  Excluir minha conta
-                </>
-              )}
+                    />
+                  )
+                  : (
+                    <>
+                      <Trash2 className="w-5 h-5" />
+
+                      Excluir minha conta
+                    </>
+                  )
+              }
+
             </button>
+
           </div>
+
         </div>
+
       </div>
+
     </div>
-  );
+  )
 }
