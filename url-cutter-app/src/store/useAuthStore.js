@@ -1,122 +1,298 @@
-import { create } from 'zustand'
-import api from '../config/axiosInstance.config.js'
+import { create } from "zustand";
+import api from "../config/axiosInstance.config.js";
+
+const errorMessages = {
+  INVALID_CREDENTIALS: "Email ou senha inválidos",
+
+  EMAIL_NOT_VERIFIED: "Seu email ainda não foi verificado",
+
+  INVALID_CODE: "Código inválido",
+
+  EMAIL_ALREADY_EXISTS: "Este email já está cadastrado",
+
+  USER_NOT_FOUND: "Usuário não encontrado",
+};
+
+const resolveErrorMessage = (err, fallback) => {
+  const rawMessage =
+    typeof err.response?.data === "string"
+      ? err.response.data
+      : err.response?.data?.message;
+
+  return errorMessages[rawMessage] || fallback;
+};
 
 export const useAuthStore = create((set, get) => ({
-  user: JSON.parse(localStorage.getItem('user')) || null,
-  token: localStorage.getItem('token') || null,
-  role: localStorage.getItem('role') || null,
+  user: JSON.parse(localStorage.getItem("user")) || null,
+
+  token: localStorage.getItem("token") || null,
+
+  role: localStorage.getItem("role") || null,
+
+  pendingEmail: localStorage.getItem("pendingEmail") || null,
+
+  otpType: localStorage.getItem("otpType") || null,
+
   loading: false,
+
   error: null,
 
+  // ================= SETTERS =================
+
   setUser: (user) => {
-    localStorage.setItem('user', JSON.stringify(user))
-    set({ user })
+    if (user) {
+      const normalizedUser = {
+        ...user,
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+      };
+
+      localStorage.setItem("user", JSON.stringify(normalizedUser));
+
+      set({
+        user: normalizedUser,
+      });
+    } else {
+      localStorage.removeItem("user");
+
+      set({
+        user: null,
+      });
+    }
   },
+
   setToken: (token) => {
     if (token) {
-      localStorage.setItem('token', token)
+      localStorage.setItem("token", token);
     } else {
-      localStorage.removeItem('token')
+      localStorage.removeItem("token");
     }
-    set({ token })
+
+    set({ token });
+  },
+
+  setRole: (role) => {
+    if (role) {
+      localStorage.setItem("role", role);
+    } else {
+      localStorage.removeItem("role");
+    }
+
+    set({ role });
+  },
+
+  setPendingEmail: (email) => {
+    if (email) {
+      localStorage.setItem("pendingEmail", email);
+    } else {
+      localStorage.removeItem("pendingEmail");
+    }
+
+    set({
+      pendingEmail: email,
+    });
+  },
+
+  setOtpType: (type) => {
+    if (type) {
+      localStorage.setItem("otpType", type);
+    } else {
+      localStorage.removeItem("otpType");
+    }
+
+    set({
+      otpType: type,
+    });
   },
 
   setError: (error) => set({ error }),
 
   setLoading: (loading) => set({ loading }),
 
-  login: async (mail, pw) => {
-    set({ loading: true, error: null })
+  // ================= LOGIN =================
+
+  login: async (email, pw) => {
+    set({
+      loading: true,
+      error: null,
+    });
 
     try {
-      const { data } = await api.post('/auth/login', { mail, pw })
+      await api.post("/auth/login", {
+        email,
+        pw,
+      });
+
+      get().setPendingEmail(email);
+
+      get().setOtpType("login");
 
       set({
-        token: data.token,
-        role: data.role,
-        user: data.userResponseDTO,
         loading: false,
-      })
+      });
 
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('role', data.role)
-      localStorage.setItem('user', JSON.stringify(data.userResponseDTO))
-
-      console.log('Login successful:', data)
-
-      //console.log('Stored role in localStorage:', get().role)
-
-      return data
+      return {
+        requires2FA: true,
+      };
     } catch (err) {
-      const message =
-        err.response?.data?.message ||
-        err.response?.status === 401
-          ? 'Credenciais inválidas'
-          : 'Erro ao realizar login'
+      const message = resolveErrorMessage(err, "Erro ao realizar login");
 
       set({
         error: message,
         loading: false,
-        user: null,
-        token: null,
-        role: null,
-      })
+      });
 
-      localStorage.removeItem('token')
-      localStorage.removeItem('role')
-      localStorage.removeItem('user')
-
-      throw new Error(message)
+      throw new Error(message);
     }
   },
 
-  signup: async (mail, pw) => {
-    set({ loading: true, error: null })
+  // ================= SIGNUP =================
+
+  signup: async (firstName, lastName, email, pw) => {
+    set({
+      loading: true,
+      error: null,
+    });
 
     try {
-      const { data } = await api.post('/auth/signup', { mail, pw })
+      await api.post("/auth/signup", {
+        firstName,
+        lastName,
+        email,
+        pw,
+      });
+
+      get().setPendingEmail(email);
+
+      get().setOtpType("signup");
 
       set({
-        token: data.token ?? null,
-        user: data.userResponseDTO ?? null,
         loading: false,
-      })
+      });
 
-      if (data.token) localStorage.setItem('token', data.token)
-      if (data.userResponseDTO)
-        localStorage.setItem('user', JSON.stringify(data.userResponseDTO))
-
-      return data
+      return {
+        requires2FA: true,
+      };
     } catch (err) {
-      const message =
-        err.response?.data ||
-        err.response?.data?.message ||
-        'Erro ao cadastrar usuário'
+      const message = resolveErrorMessage(err, "Erro ao cadastrar usuário");
 
       set({
         error: message,
         loading: false,
-      })
+      });
 
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      localStorage.removeItem('role')
-
-      throw new Error(message)
+      throw new Error(message);
     }
   },
+
+  // ================= VERIFY OTP =================
+
+  verifyOtp: async (code) => {
+    set({
+      loading: true,
+      error: null,
+    });
+
+    try {
+      const endpoint =
+        get().otpType === "signup" ? "/auth/verify-signup" : "/auth/verify-2fa";
+
+      const { data } = await api.post(endpoint, {
+        email: get().pendingEmail,
+        code,
+      });
+
+      // Compatibilidade entre os dois endpoints
+      const user = data.user || data.userResponseDTO;
+
+      const role = data.role?.startsWith("ROLE_")
+        ? data.role
+        : `ROLE_${data.role}`;
+
+      get().setToken(data.token);
+
+      get().setRole(role);
+
+      get().setUser({
+        ...user,
+        firstName: user?.firstName || "",
+        lastName: user?.lastName || "",
+      });
+
+      get().setPendingEmail(null);
+
+      get().setOtpType(null);
+
+      set({
+        loading: false,
+      });
+
+      return data;
+    } catch (err) {
+      const message = resolveErrorMessage(err, "Código inválido");
+
+      set({
+        error: message,
+        loading: false,
+      });
+
+      throw new Error(message);
+    }
+  },
+
+  // ================= LOGOUT =================
 
   logout: () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    localStorage.removeItem('role')
+    get().setToken(null);
+
+    get().setRole(null);
+
+    get().setUser(null);
+
+    get().setPendingEmail(null);
+
+    get().setOtpType(null);
+
     set({
-      user: null,
-      token: null,
       error: null,
-    })
+    });
   },
 
+  // ================= DELETE ACCOUNT =================
+
+  deleteAccount: async () => {
+    set({
+      loading: true,
+      error: null,
+    });
+
+    try {
+      await api.delete("/auth/delete", {
+        headers: {
+          Authorization: `Bearer ${get().token}`,
+        },
+      });
+
+      get().logout();
+
+      set({
+        loading: false,
+      });
+    } catch (err) {
+      const message = resolveErrorMessage(err, "Erro ao excluir conta");
+
+      set({
+        error: message,
+        loading: false,
+      });
+
+      throw new Error(message);
+    }
+  },
+
+  // ================= HELPERS =================
+
   isAuthenticated: () => !!get().token,
-  isActive: () => get().user?.status === 'ACTIVE',
-}))
+
+  isActive: () => get().user?.status === "ACTIVE",
+}));

@@ -1,7 +1,7 @@
 package com.tcc.url_cutter_api.service.security;
 
 import com.tcc.url_cutter_api.dto.security.AuthRequestRecord;
-import com.tcc.url_cutter_api.enums.UserStatus;
+import com.tcc.url_cutter_api.enums.auth.UserStatus;
 import com.tcc.url_cutter_api.model.auth.User;
 import com.tcc.url_cutter_api.repo.auth.UserRepository;
 import org.springframework.http.HttpStatus;
@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 @Service
 public class UserService {
 
@@ -17,6 +19,10 @@ public class UserService {
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
+    }
+
+    public Mono<User> findById(UUID id) {
+        return userRepository.findById(id);
     }
 
     public Mono<User> findByEmail(String username) {
@@ -36,7 +42,7 @@ public class UserService {
 
         User newUser = new User();
         newUser.setId(null); // força INSERT
-        newUser.setEmail(user.mail());
+        newUser.setEmail(user.email());
         //newUser.setPasswordHash(user.pw());
         newUser.setPasswordHash(user.pw());
         newUser.setStatus(UserStatus.ACTIVE);
@@ -53,7 +59,7 @@ public class UserService {
 
     public Mono<ResponseEntity<Void>> login(@RequestBody AuthRequestRecord auth) {
 
-        return userRepository.findByEmail(auth.mail())
+        return userRepository.findByEmail(auth.email())
                 // verifica a senha
                 .filter(user -> user.getPasswordHash().equals(auth.pw()))
                 // se passou pelo filter → autenticado
@@ -62,5 +68,14 @@ public class UserService {
                 .switchIfEmpty(
                         Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build())
                 );
+    }
+
+    public Mono<Void> deleteById(UUID id) {
+        return userRepository.deleteById(id);
+    }
+
+    public Mono<Void> deleteByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .flatMap(user -> userRepository.deleteById(user.getId()));
     }
 }

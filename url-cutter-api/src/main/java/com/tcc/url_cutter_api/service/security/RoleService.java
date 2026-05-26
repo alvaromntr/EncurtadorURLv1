@@ -1,6 +1,6 @@
 package com.tcc.url_cutter_api.service.security;
 
-import com.tcc.url_cutter_api.enums.RoleName;
+import com.tcc.url_cutter_api.enums.auth.RoleName;
 import com.tcc.url_cutter_api.model.auth.Role;
 import com.tcc.url_cutter_api.repo.auth.RoleRepository;
 import org.springframework.stereotype.Service;

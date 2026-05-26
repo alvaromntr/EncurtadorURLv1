@@ -1,18 +1,35 @@
 import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore.js";
+import { Link, useNavigate } from "react-router-dom";
 
-// ================= LOGIN PAGE =================
 export default function LoginPage() {
-  const [mail, setMail] = useState("");
+  const [email, setEmail] = useState("");
+
   const [pw, setPw] = useState("");
+
+  const navigate = useNavigate();
 
   const { login, loading, error } = useAuthStore();
 
+  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const isValidPassword = pw.length >= 6;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!isValidEmail(email)) {
+      return;
+    }
+
+    if (!isValidPassword) {
+      return;
+    }
+
     try {
-      await login(mail, pw);
-      alert("Login realizado com sucesso!");
+      await login(email, pw);
+
+      navigate("/verify-otp");
     } catch (err) {
       console.error(err.message);
     }
@@ -24,40 +41,56 @@ export default function LoginPage() {
         <div className="card-body">
           <h2 className="text-2xl font-bold text-center">Login</h2>
 
-          {error && (
-            <div className="alert alert-error text-sm">{error}</div>
-          )}
+          {error && <div className="alert alert-error">{error}</div>}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="form-control">
-              <label className="label">Email</label>
+            <div>
               <input
                 type="email"
-                className="input input-bordered"
-                value={mail}
-                onChange={(e) => setMail(e.target.value)}
+                placeholder="Email"
+                className="input input-bordered w-full"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
+
+              {email && !isValidEmail(email) && (
+                <p className="text-red-500 text-sm mt-1">
+                  Informe um email válido
+                </p>
+              )}
             </div>
 
-            <div className="form-control">
-              <label className="label">Senha</label>
+            <div>
               <input
                 type="password"
-                className="input input-bordered"
+                placeholder="Senha"
+                className="input input-bordered w-full"
                 value={pw}
                 onChange={(e) => setPw(e.target.value)}
                 required
               />
+
+              {pw && !isValidPassword && (
+                <p className="text-red-500 text-sm mt-1">
+                  A senha deve ter no mínimo 6 caracteres
+                </p>
+              )}
             </div>
 
             <button
               type="submit"
-              className={`btn btn-primary w-full ${loading && "loading"}`}
-              disabled={loading}
+              disabled={!isValidEmail(email) || !isValidPassword || loading}
+              className={`btn btn-primary w-full ${loading ? "loading" : ""}`}
             >
-              Entrar
+              {loading ? "" : "Entrar"}
             </button>
+
+            <div className="text-center">
+              <Link to="/signup" className="link">
+                Criar conta
+              </Link>
+            </div>
           </form>
         </div>
       </div>

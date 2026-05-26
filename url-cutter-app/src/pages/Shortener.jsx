@@ -1,13 +1,26 @@
-import React, { use, useEffect, useState } from 'react'
-import { useUrlStore } from '../store/useUrlStore'
-import { useQrCodeStore } from '../store/useQrCodeStore'
+import React, { useEffect, useState } from "react";
+
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from "recharts";
+
+import { useUrlStore } from "../store/useUrlStore";
+import { useQrCodeStore } from "../store/useQrCodeStore";
+import Navbar from "../components/Navbar.jsx";
 
 export default function Shortener() {
-  const [inputUrl, setInputUrl] = useState('')
-  const [selectedUrl, setSelectedUrl] = useState(null)
-  const { clickCounts, refreshClicks } = useUrlStore()
+  const [inputUrl, setInputUrl] = useState("");
+  const [selectedUrl, setSelectedUrl] = useState(null);
 
   const {
+    clickCounts,
+    refreshClicks,
     shortenUrl,
     fetchUrls,
     deleteUrl,
@@ -15,64 +28,68 @@ export default function Shortener() {
     loading,
     error,
     history,
-  } = useUrlStore()
+  } = useUrlStore();
 
   const {
     generateQrCode,
     qrCodeUrl,
     loading: qrLoading,
     clearQrCode,
-  } = useQrCodeStore()
+  } = useQrCodeStore();
 
   // 🔥 Carrega histórico ao abrir
   useEffect(() => {
-    fetchUrls()
-  }, [])
+    fetchUrls();
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      refreshClicks()
-    }, 3000)
+      refreshClicks();
+    }, 3000);
 
-    return () => clearInterval(interval)
-  }, [])
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    if (!inputUrl) return
+    if (!inputUrl) return;
 
     try {
-      await shortenUrl(inputUrl)
-      setInputUrl('')
+      await shortenUrl(inputUrl);
+
+      setInputUrl("");
     } catch (err) {
-      console.error(err.message)
+      console.error(err.message);
     }
-  }
+  };
 
   const handleDelete = async (id) => {
     try {
-      await deleteUrl(id)
+      await deleteUrl(id);
     } catch (err) {
-      console.error(err.message)
+      console.error(err.message);
     }
-  }
+  };
 
   const handleGenerateQr = async (shortUrl) => {
     try {
-      setSelectedUrl(shortUrl)
+      setSelectedUrl(shortUrl);
 
-      const shortCode = shortUrl.split('/').pop()
-      await generateQrCode(shortCode)
+      const shortCode = shortUrl.split("/").pop();
 
-      document.getElementById('qr_modal').showModal()
+      await generateQrCode(shortCode);
+
+      document.getElementById("qr_modal").showModal();
     } catch (err) {
-      console.error(err.message)
+      console.error(err.message);
     }
-  }
+  };
 
   return (
     <div className="flex flex-col items-center justify-start p-10 gap-6 w-full">
+      <Navbar />
+
       <h1 className="text-3xl font-bold">🔗 Encurtador de URL</h1>
 
       {/* Form */}
@@ -85,12 +102,8 @@ export default function Shortener() {
           onChange={(e) => setInputUrl(e.target.value)}
         />
 
-        <button
-          type="submit"
-          className="btn btn-primary"
-          disabled={loading}
-        >
-          {loading ? 'Encurtando...' : 'Encurtar'}
+        <button type="submit" className="btn btn-primary" disabled={loading}>
+          {loading ? "Encurtando..." : "Encurtar"}
         </button>
       </form>
 
@@ -117,14 +130,39 @@ export default function Shortener() {
         </div>
       )}
 
+      {/* 🔥 GRÁFICO DE BARRAS */}
+      <div className="w-full max-w-4xl bg-base-200 p-4 rounded-xl">
+        <h2 className="font-semibold mb-4">Cliques por URL</h2>
+
+        <div className="w-full h-72">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={history.map((item) => ({
+                name: item.shortUrl.split("/").pop(),
+
+                clicks: clickCounts[item.id] ?? item.clickCount ?? 0,
+              }))}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+
+              <XAxis dataKey="name" />
+
+              <YAxis />
+
+              <Tooltip />
+
+              <Bar dataKey="clicks" fill="#3B82F6" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
       {/* Histórico */}
       <div className="w-full max-w-xl">
         <h2 className="font-semibold mb-2">Histórico</h2>
 
         {history.length === 0 && !loading && (
-          <p className="text-sm opacity-60">
-            Nenhuma URL criada ainda.
-          </p>
+          <p className="text-sm opacity-60">Nenhuma URL criada ainda.</p>
         )}
 
         <ul className="flex flex-col gap-2">
@@ -143,9 +181,10 @@ export default function Shortener() {
                 rel="noreferrer"
                 onClick={() => {
                   setTimeout(() => {
-                    refreshClicks()
-                    item.clickCount = (item.clickCount ?? 0) + 1
-                  }, 500) // 300–1000ms funciona bem
+                    refreshClicks();
+
+                    item.clickCount = (item.clickCount ?? 0) + 1;
+                  }, 500);
                 }}
                 className="link link-primary break-all"
               >
@@ -155,6 +194,16 @@ export default function Shortener() {
               <div className="flex justify-between items-center mt-2 gap-2">
                 <span className="text-xs opacity-60">
                   Cliques: {clickCounts[item.id] ?? 0}
+                </span>
+
+                <span className="text-xs opacity-60">
+                  Expira em:{" "}
+                  {item.createdAt
+                    ? new Date(
+                        new Date(item.createdAt).getTime() +
+                          7 * 24 * 60 * 60 * 1000,
+                      ).toLocaleDateString("pt-BR")
+                    : "-"}
                 </span>
 
                 <div className="flex gap-2">
@@ -196,11 +245,7 @@ export default function Shortener() {
 
           {qrCodeUrl && !qrLoading && (
             <>
-              <img
-                src={qrCodeUrl}
-                alt="QR Code"
-                className="w-52 h-52"
-              />
+              <img src={qrCodeUrl} alt="QR Code" className="w-52 h-52" />
 
               <a
                 href={qrCodeUrl}
@@ -216,8 +261,9 @@ export default function Shortener() {
             <form
               method="dialog"
               onSubmit={() => {
-                setSelectedUrl(null)
-                clearQrCode()
+                setSelectedUrl(null);
+
+                clearQrCode();
               }}
             >
               <button className="btn">Fechar</button>
@@ -226,5 +272,5 @@ export default function Shortener() {
         </div>
       </dialog>
     </div>
-  )
+  );
 }

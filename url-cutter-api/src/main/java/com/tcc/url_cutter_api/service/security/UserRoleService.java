@@ -26,27 +26,64 @@ public class UserRoleService {
     /**
      * Associa um usuário a uma role (se ainda não existir)
      */
-    public Mono<UserRole> assignRole(UUID userId, UUID roleId) {
-        logger.info("Assigning role {} to user {}", roleId, userId);
+    public Mono<UserRole> assignRole(
+            UUID userId,
+            UUID roleId
+    ) {
 
-        // Checa se já existe a associação
+        logger.info(
+                "Assigning role {} to user {}",
+                roleId,
+                userId
+        );
+
         return userRoleRepository
                 .findByUserIdAndRoleId(userId, roleId)
+
                 .hasElements()
+
                 .flatMap(exists -> {
+
                     if (exists) {
-                        logger.info("User {} already has role {}", userId, roleId);
-                        return Mono.empty(); // não salva duplicata
+
+                        logger.info(
+                                "User {} already has role {}",
+                                userId,
+                                roleId
+                        );
+
+                        return Mono.empty();
                     }
 
                     UserRole userRole = new UserRole();
+
                     userRole.setUserId(userId);
+
                     userRole.setRoleId(roleId);
 
-                    logger.info("Saving UserRole for user {} with role {}", userId, roleId);
-                    return userRoleRepository.save(userRole)
-                            .doOnNext(ur -> logger.info("UserRole saved for user {} with role {}", ur.getUserId(), ur.getRoleId()))
-                            .doOnError(err -> logger.error("Erro ao salvar UserRole", err));
+                    logger.info(
+                            "Saving UserRole for user {} with role {}",
+                            userId,
+                            roleId
+                    );
+
+                    return userRoleRepository
+                            .save(userRole)
+
+                            .doOnNext(ur ->
+                                    logger.info(
+                                            "UserRole saved for user {} with role {}",
+                                            ur.getUserId(),
+                                            ur.getRoleId()
+                                    )
+                            )
+
+                            .doOnError(err ->
+                                    logger.error(
+                                            "Erro ao salvar UserRole",
+                                            err
+                                    )
+                            );
                 });
     }
 
@@ -68,9 +105,17 @@ public class UserRoleService {
      * Verifica se um usuário possui uma role específica
      */
     public Mono<Boolean> hasRole(UUID userId, UUID roleId) {
+
         return userRoleRepository
                 .findByUserIdAndRoleId(userId, roleId)
                 .hasElements();
+    }
+
+    /**
+     * Remove todas as roles de um usuário
+     */
+    public Mono<Void> deleteByUserId(UUID userId) {
+        return userRoleRepository.deleteByUserId(userId);
     }
 }
 

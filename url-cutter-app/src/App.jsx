@@ -3,11 +3,12 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 
 import { useAuthStore } from './store/useAuthStore'
 
-import Navbar from './components/Navbar.jsx'
 import Home from './pages/Home.jsx'
 import LoginForm from './pages/LoginForm.jsx'
 import SignUpForm from './pages/SignUpForm.jsx'
 import Shortener from './pages/Shortener.jsx'
+import VerifyOtpPage from './pages/VerifyOtpPage.jsx'
+import ProfilePage from './pages/ProfilePage.jsx'
 
 // 🔒 Componente de rota protegida
 function PrivateRoute({ children }) {
@@ -48,9 +49,6 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-screen w-screen">
-      
-      {/* Navbar sempre visível (pode esconder se quiser em login) */}
-      <Navbar />
 
       <Routes>
 
@@ -62,6 +60,16 @@ export default function App() {
             </PrivateRoute>
           }
         />
+
+        <Route
+          path="/profile"
+          element={
+            <PrivateRoute>
+              <ProfilePage />
+            </PrivateRoute>
+          }
+        />
+
 
         {/* 🔓 Rotas públicas */}
         <Route
@@ -78,6 +86,15 @@ export default function App() {
           element={
             <PublicRoute>
               <SignUpForm />
+            </PublicRoute>
+          }
+        />
+
+        <Route
+          path="/verify-otp"
+          element={
+            <PublicRoute>
+              <VerifyOtpPage />
             </PublicRoute>
           }
         />

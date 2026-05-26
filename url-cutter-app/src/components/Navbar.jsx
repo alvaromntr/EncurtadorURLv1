@@ -33,6 +33,15 @@ export default function Navbar() {
         </Link> */}
       </div>
 
+      {/* Profile */}
+      <div className="flex gap-2">
+        <Link to="/profile">
+          <button className={`btn btn-sm ${isActive("/profile")}`}>
+            Profile
+          </button>
+        </Link>
+      </div>
+
       {/* Logout */}
       <div className="ml-4">
         <button className="btn btn-error btn-sm" onClick={logout}>

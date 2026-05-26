@@ -1,6 +1,6 @@
 package com.tcc.url_cutter_api.model.auth;
 
-import com.tcc.url_cutter_api.enums.RoleName;
+import com.tcc.url_cutter_api.enums.auth.RoleName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
