@@ -1,6 +1,7 @@
 package com.tcc.url_cutter_api.controller.security;
 
 import com.tcc.url_cutter_api.controller.UrlController;
+import com.tcc.url_cutter_api.dto.ChangePasswordRequest;
 import com.tcc.url_cutter_api.dto.security.*;
 import com.tcc.url_cutter_api.enums.auth.RoleName;
 import com.tcc.url_cutter_api.enums.auth.UserStatus;
@@ -274,6 +275,55 @@ public class AuthController {
                                         );
                             });
                 });
+    }
+
+    @PostMapping("/change-password")
+    public Mono<ResponseEntity<Void>> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request,
+            Authentication authentication
+    ) {
+
+        AuthenticatedUser authenticatedUser =
+                (AuthenticatedUser) authentication.getPrincipal();
+
+        UUID userId = authenticatedUser.id();
+
+        return userService.findById(userId)
+
+                .switchIfEmpty(
+                        Mono.error(
+                                new ResponseStatusException(
+                                        HttpStatus.NOT_FOUND,
+                                        "USER_NOT_FOUND"
+                                )
+                        )
+                )
+
+                .flatMap(user -> {
+
+                    if (!encoder.matches(
+                            request.currentPassword(),
+                            user.getPasswordHash()
+                    )) {
+
+                        return Mono.error(
+                                new ResponseStatusException(
+                                        HttpStatus.UNAUTHORIZED,
+                                        "INVALID_PASSWORD"
+                                )
+                        );
+                    }
+
+                    user.setPassword(
+                            request.newPassword()
+                    );
+
+                    return userService.save(user);
+                })
+
+                .thenReturn(
+                        ResponseEntity.noContent().build()
+                );
     }
 
     @PostMapping("/verify-signup")

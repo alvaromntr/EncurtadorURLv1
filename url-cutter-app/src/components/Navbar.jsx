@@ -42,6 +42,15 @@ export default function Navbar() {
         </Link>
       </div>
 
+      {/* Analytics */}
+      <div className="flex gap-2">
+        <Link to="/analytics">
+          <button className={`btn btn-sm ${isActive("/analytics")}`}>
+            Analytics
+          </button>
+        </Link>
+      </div>
+
       {/* Logout */}
       <div className="ml-4">
         <button className="btn btn-error btn-sm" onClick={logout}>

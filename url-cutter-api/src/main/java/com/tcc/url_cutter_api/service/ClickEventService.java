@@ -30,6 +30,25 @@ public class ClickEventService {
         return clickEventRepository.save(event);
     }
 
+    public Mono<Void> registerClick(
+            Long urlId,
+            String ipAddress,
+            String userAgent,
+            String referer
+    ) {
+
+        ClickEvent event = ClickEvent.builder()
+                .urlId(urlId)
+                .clickedAt(LocalDateTime.now())
+                .ipAddress(ipAddress)
+                .userAgent(userAgent)
+                .referer(referer)
+                .build();
+
+        return clickEventRepository.save(event)
+                .then();
+    }
+
     // 🔹 Listar cliques de uma URL específica
     public Flux<ClickEvent> getClicksByUrlId(Long urlId) {
         return clickEventRepository.findByUrlId(urlId);

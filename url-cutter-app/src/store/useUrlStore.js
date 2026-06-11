@@ -5,7 +5,8 @@ export const useUrlStore = create((set, get) => ({
   shortUrl: null,
   originalUrl: null,
   history: [],
-  clickCounts: {}, // { [urlId]: number }
+  clicks: [],        // 👈 adicionar
+  clickCounts: {},
   loading: false,
   error: null,
 
@@ -120,6 +121,30 @@ export const useUrlStore = create((set, get) => ({
 
       set({
         error: message,
+        loading: false,
+      })
+    }
+  },
+
+    fetchClicksByUrl: async (urlId) => {
+    set({ loading: true, error: null })
+
+    try {
+
+      const { data } =
+        await api.get(`/api/clicks/url/${urlId}`)
+
+      set({
+        clicks: data,
+        loading: false,
+      })
+
+    } catch (err) {
+
+      set({
+        error:
+          err.response?.data?.message ||
+          'Erro ao buscar cliques',
         loading: false,
       })
     }

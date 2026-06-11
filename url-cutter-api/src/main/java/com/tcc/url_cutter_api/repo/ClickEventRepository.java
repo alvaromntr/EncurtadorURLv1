@@ -8,5 +8,7 @@ public interface ClickEventRepository extends ReactiveCrudRepository<ClickEvent,
 
     Flux<ClickEvent> findByUrlId(Long urlId);
 
+    Flux<ClickEvent> findAllByUrlId(Long urlId);
+
     Flux<ClickEvent> findByIpAddress(String ipAddress);
 }

@@ -33,53 +33,13 @@ export default function SignUpPage() {
   const isValidEmail = (email) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  const isValidPassword = pw.length >= 6;
+  const isPasswordValid = pw.length >= 6;
 
   const passwordsMatch =
     pw === confirmPw;
 
-  const handleSubmit = async (e) => {
-
-    e.preventDefault();
-
-    setLocalError("");
-
-    if (!isValidEmail(email)) {
-
-      setLocalError(
-        "Informe um email válido"
-      );
-
-      return;
-    }
-
-    if (!isValidPassword) {
-
-      setLocalError(
-        "A senha deve ter no mínimo 6 caracteres"
-      );
-
-      return;
-    }
-
-    if (!passwordsMatch) {
-
-      setLocalError(
-        "As senhas não coincidem"
-      );
-
-      return;
-    }
-
-    if (!acceptedLgpd) {
-
-      setShowLgpdModal(true);
-
-      return;
-    }
-
+  const performSignup = async () => {
     try {
-
       await signup(
         firstName,
         lastName,
@@ -91,9 +51,64 @@ export default function SignUpPage() {
 
     } catch (err) {
 
-      console.error(err.message);
+      console.error("Erro completo:", err);
+
+      console.error(
+        "Response:",
+        err?.response?.data
+      );
+
+      setLocalError(
+        err?.response?.data?.message ||
+        err?.response?.data ||
+        err?.message ||
+        "Erro ao cadastrar usuário"
+      );
     }
   };
+
+const handleSubmit = async (e) => {
+
+  e.preventDefault();
+
+  setLocalError("");
+
+  if (!isValidEmail(email)) {
+
+    setLocalError(
+      "Informe um email válido"
+    );
+
+    return;
+  }
+
+  if (!isPasswordValid) {
+
+    setLocalError(
+      "A senha deve ter no mínimo 6 caracteres"
+    );
+
+    return;
+  }
+
+  if (!passwordsMatch) {
+
+    setLocalError(
+      "As senhas não coincidem"
+    );
+
+    return;
+  }
+
+  if (!acceptedLgpd) {
+
+    setShowLgpdModal(true);
+
+    return;
+  }
+
+  await performSignup();
+};
 
   return (
 
@@ -174,11 +189,11 @@ export default function SignUpPage() {
                 required
               />
 
-              {pw && !isValidPassword && (
-                <p className="text-red-500 text-sm mt-1">
-                  A senha deve ter no mínimo 6 caracteres
-                </p>
-              )}
+              {pw && !isPasswordValid && (
+  <p className="text-red-500 text-sm mt-1">
+    A senha deve ter no mínimo 6 caracteres
+  </p>
+)}
 
             </div>
 
@@ -206,11 +221,11 @@ export default function SignUpPage() {
             <button
               type="submit"
               disabled={
-                !isValidEmail(email) ||
-                !isValidPassword ||
-                !passwordsMatch ||
-                loading
-              }
+  !isValidEmail(email) ||
+  !isPasswordValid ||
+  !passwordsMatch ||
+  loading
+}
               className={`btn btn-secondary w-full ${
                 loading ? "loading" : ""
               }`}
@@ -288,40 +303,18 @@ export default function SignUpPage() {
               </button>
 
               <button
-                className="btn btn-primary"
-                onClick={async () => {
+  className="btn btn-primary"
+  onClick={async () => {
 
-                  setAcceptedLgpd(true);
+    setAcceptedLgpd(true);
 
-                  setShowLgpdModal(false);
+    setShowLgpdModal(false);
 
-                  try {
-
-                    await signup(
-                      firstName,
-                      lastName,
-                      email,
-                      pw
-                    );
-
-                    navigate("/verify-otp");
-
-                  } catch (err) {
-                    
-                  console.error(
-                    "Erro ao cadastrar usuário",
-                    err.response?.data || err.message
-                  );
-
-                  setLocalError(
-                    err.response?.data ||
-                    "Erro ao cadastrar usuário"
-                  );
-                }
-                }}
-              >
-                Aceito os termos
-              </button>
+    await performSignup();
+  }}
+>
+  Aceito os termos
+</button>
 
             </div>
 

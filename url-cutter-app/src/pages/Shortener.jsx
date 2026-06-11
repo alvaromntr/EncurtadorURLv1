@@ -63,6 +63,8 @@ export default function Shortener() {
 
       await shortenUrl(inputUrl)
 
+      await fetchUrls()
+
       setInputUrl('')
 
     } catch (err) {
@@ -172,7 +174,7 @@ export default function Shortener() {
       )}
 
       {/* 🔥 GRÁFICO DE BARRAS */}
-      <div className="w-full max-w-4xl bg-base-200 p-4 rounded-xl">
+      {/* <div className="w-full max-w-4xl bg-base-200 p-4 rounded-xl">
 
         <h2 className="font-semibold mb-4">
           Cliques por URL
@@ -218,7 +220,7 @@ export default function Shortener() {
 
         </div>
 
-      </div>
+      </div> */}
 
       {/* Histórico */}
       <div className="w-full max-w-xl">

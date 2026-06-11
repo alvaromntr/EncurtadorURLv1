@@ -236,10 +236,63 @@ export const useAuthStore = create((set, get) => ({
 
     } catch (err) {
 
+      console.error(
+        "Signup error:",
+        err.response?.status,
+        err.response?.data
+      )
+
       const message =
         resolveErrorMessage(
           err,
           'Erro ao cadastrar usuário'
+        )
+
+      set({
+        error: message,
+        loading: false
+      })
+
+      throw err
+    }
+  },
+
+  changePassword: async (
+    currentPassword,
+    newPassword
+  ) => {
+
+    set({
+      loading: true,
+      error: null
+    })
+
+    try {
+
+      await api.post(
+        '/auth/change-password',
+        {
+          currentPassword,
+          newPassword
+        },
+        {
+          headers: {
+            Authorization:
+              `Bearer ${get().token}`
+          }
+        }
+      )
+
+      set({
+        loading: false
+      })
+
+    } catch (err) {
+
+      const message =
+        resolveErrorMessage(
+          err,
+          'Erro ao alterar senha'
         )
 
       set({

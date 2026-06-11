@@ -3,12 +3,12 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 
 import { useAuthStore } from './store/useAuthStore'
 
-import Home from './pages/Home.jsx'
 import LoginForm from './pages/LoginForm.jsx'
 import SignUpForm from './pages/SignUpForm.jsx'
 import Shortener from './pages/Shortener.jsx'
 import VerifyOtpPage from './pages/VerifyOtpPage.jsx'
 import ProfilePage from './pages/ProfilePage.jsx'
+import Analytics from './pages/Analytics.jsx'
 
 // 🔒 Componente de rota protegida
 function PrivateRoute({ children }) {
@@ -57,6 +57,15 @@ export default function App() {
           element={
             <PrivateRoute>
               <Shortener />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/analytics"
+          element={
+            <PrivateRoute>
+              <Analytics />
             </PrivateRoute>
           }
         />
